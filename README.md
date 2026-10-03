@@ -1,102 +1,56 @@
 <div align="center">
-  <img src="web/public/favicon.svg" width="64" alt="TerraFort leaf mark" />
-  <h1>TerraFort</h1>
-  <p>Protect before. Prove after. Recover faster.</p>
-  <p>Assisted farm registration and preparedness for an agricultural resilience pilot.</p>
-  <p><a href="terrafort-complete-blueprint.md">Product blueprint</a> · <a href="docs/openapi.yml">API contract</a> · <a href="docs/foundation.md">Foundation scope</a></p>
-  <img src="docs/screenshots/overview.svg" width="1000" alt="TerraFort farm preparedness workspace with clearly labelled synthetic farm records" />
+  <img src="web/public/brand/wordmark.svg" width="320" alt="TerraFort" />
+  <p><strong>Protect before. Prove after. Recover faster.</strong></p>
+  <p>Farm records and practical preparedness, built around the farmer.</p>
+  <p><img src="docs/screenshots/homepage.svg" width="960" alt="TerraFort public homepage with a sample farm record and the field workspace entry" /></p>
 </div>
 
-## Run locally
+## The problem
 
-This foundation is for local evaluation with synthetic records. It is not approved for collecting real farmer information or issuing emergency advice.
+A flood warning tells a farmer what may happen. It rarely tells them which equipment to move, where the farm documents are, or what information they will need if the crop is damaged.
 
-Requirements: Java 21, Maven 3.8 or newer, Node.js 24, Python 3, and Docker Compose. PostgreSQL 16 can be used directly when Docker is unavailable. The Compose service uses PostGIS; this release stores coordinate rings and does not run spatial hazard queries.
+Farm details, preparations and recovery records are often kept separately. The farmer has to repeat the same information to field workers, local organisations and institutions, sometimes when time and connectivity are already limited.
 
-From the repository root:
+TerraFort starts with that gap: a clear farm record that can become a practical action plan and, later, a record of damage and recovery.
 
-```bash
-docker compose up -d --wait
-cp .env.example .env
-set -a
-. ./.env
-set +a
-mvn -f backend/pom.xml spring-boot:run
-```
+## What TerraFort does
 
-In a second terminal:
+TerraFort is an assisted agricultural preparedness and recovery project. Its starting focus is crop farmers in one flood-prone Bihar district, working through field workers and local organisations. The district and institutional partner have not yet been confirmed.
 
-```bash
-cd web
-npm ci
-npm run dev
-```
+The current product connects three steps:
 
-Open `http://127.0.0.1:5173`. The API runs on `http://127.0.0.1:8080`. The database and both development servers bind to loopback. Do not change those bindings or expose the local profile through a public tunnel.
-
-Optional sample records, while the local API is running:
-
-```bash
-python3 scripts/seed-demo.py
-```
-
-The fixture script refuses non-demo workspaces and uses stable request identifiers, so rerunning it does not duplicate its records. Names, villages, boundaries and assets are synthetic.
-
-## What works
-
-| Workflow | Foundation behaviour |
+| Step | What happens |
 | --- | --- |
-| Farm registration | Required consent, crop stage, reported area, assets and a validated closed plot boundary. Saved atomically in PostgreSQL. |
-| Preparedness | Three illustrative actions created for each farm. Completion survives refresh; a retried write does not toggle the value twice. |
-| Farmer summary | Saved crop and asset details, a schematic boundary, consent date and a printable farmer copy. |
-| Field workspace | Search, selected-farm links, mobile navigation, visible keyboard focus, empty states and recoverable API errors. |
+| Know the farm | Record the crop, growth stage, reported area, movable assets and plot boundary with permission. |
+| Make a plan | Keep a preparedness checklist alongside the farm and save which actions have been completed. |
+| Keep the record | Produce a farmer summary with the saved details, consent date and a schematic plot boundary. |
 
-The interface has no fabricated weather readings, risk scores, insurance coverage or payment totals. Checklist completion is not a safety score. The plot drawing is not a surveyed map.
+The public homepage explains this workflow. The separate field workspace handles the records and actions.
 
-## Verify the foundation
+## Who it is for
 
-Create a separate test database before running backend tests. Never point the integration tests at a database containing records you need; the tests truncate their tables.
+**Farmers and households** need a record they can understand with a trusted field worker. The intended farmer service is free or institution-sponsored.
 
-```bash
-docker compose exec database createdb -U terrafort terrafort_test
-DATABASE_URL=jdbc:postgresql://127.0.0.1:5432/terrafort_test \
-DATABASE_PASSWORD=local-only-password \
-mvn -B -f backend/pom.xml spotless:check verify
+**Field workers** need one consistent way to register a farm, record consent and keep its preparations together.
 
-for test in tests/test_*.py; do python3 "$test"; done
+**FPOs and local organisations** need a foundation for understanding member farms before coordinating a wider preparedness programme.
 
-cd web
-npm ci
-npm run format:check
-npm run lint
-npm test
-npm run build
-npm audit --omit=dev
-npx playwright install --with-deps chromium
-npm run test:e2e
-```
+## How the product works
 
-Browser tests need the local API running. If Chromium is already installed, use `CHROMIUM_PATH="$(command -v chromium)" npm run test:e2e` instead of downloading a browser.
+The React interface submits a farm record to a Spring Boot API. The API validates the information and saves the farm, consent record, initial actions and audit event in one PostgreSQL transaction. A repeated registration request returns the same record rather than creating a duplicate.
 
-GitHub Actions runs the original skill-tool tests, Java formatting and database integration tests, frontend formatting, lint, unit tests, build, dependency audit, browser workflows and automated accessibility checks. The PostGIS service is a real database, not an in-memory substitute. Tests are not retried to hide failures.
+Checklist updates save the requested completion state. The farmer summary reads the saved records. Organisation-level access checks are enforced by the API; a boundary drawing or browser control is never treated as authorisation.
 
-## Project layout
+The public homepage is rendered during the build and does not need the farm API. Farm records are loaded only when the field workspace is opened.
 
-```text
-backend/    Spring Boot API, transaction boundaries and Flyway migrations
-web/        React application, semantic CSS tokens and browser tests
-docs/       Decisions, API contract, screenshots and release boundaries
-scripts/    Local synthetic-data setup
-skills/     Original repository skills, preserved unchanged
-tests/      Original skill-tool regression tests
-```
+## The wider direction
 
-The original HTML prototype is retained for reference. `web/` is the application; opening `terrafort-complete-ui.html` does not run the new product.
+The product blueprint follows the full chain: risk, local action, completion evidence, damage evidence and recovery. Validated warnings, approved local playbooks, offline capture and authorised recovery hand-offs are planned work, not current integrations.
 
-## Before a field pilot
+## Trust comes first
 
-The non-local backend requires an OIDC JWT with the configured issuer, audience, `farms:write` scope and UUID `organisation_id` claim. The local profile deliberately has no sign-in and must only hold synthetic data. Browser sign-in and an identity provider have not been connected.
+The current workspace is an evaluation release for sample records. Its checklist is illustrative and needs local expert approval before field use. It is not a live flood-warning, insurance or emergency service.
 
-Local-language consent, offline capture and synchronisation, an approved district playbook, correction and withdrawal workflows, deployment secrets, TLS, encryption, retention and operational backup ownership are release gates. Official weather, messaging, insurance, damage evidence and recovery integrations are outside this foundation.
+A farm record does not confirm insurance cover, predict a flood or guarantee compensation. Permission to keep a record does not automatically permit sharing it with a bank or insurer. Software cannot stop a flood; official authorities take priority during an emergency.
 
-No production deployment or CD rollout is configured because no approved hosting target or credentials were supplied. CI prepares and verifies the foundation; it does not represent a live farmer service. See [the foundation record](docs/foundation.md) for the next gate.
+[Product blueprint](terrafort-complete-blueprint.md) · [Architecture](docs/decisions/0001-foundation.md) · [API contract](docs/openapi.yml) · [Developer guide](docs/development.md)

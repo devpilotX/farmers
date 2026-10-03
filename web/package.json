@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/prerender.tsx --outDir .prerender && node .prerender/prerender.js",
     "preview": "vite preview --host 127.0.0.1",
     "lint": "eslint .",
     "format": "prettier --write src tests *.ts *.json index.html",
     "format:check": "prettier --check src tests *.ts *.json index.html",
     "test": "vitest run src",
-    "test:e2e": "playwright test"
+    "test:e2e": "npm run build && playwright test"
   },
   "dependencies": {
     "react": "19.3.0",
