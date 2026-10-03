@@ -19,11 +19,11 @@ The history view shows the latest 100 events, newest first. Correction entries c
 | Retry identity | Matching retries after a later correction return the current farm; conflicting payloads and cross-farm key reuse fail. |
 | Access | Another organisation cannot correct the farm or read its history. Token and scope requirements remain enforced. |
 | Frontend units | 30 route, boundary, capture-policy and correction-payload tests passed. |
-| Browser workflows | 37 tests passed. Previous registration, checklist, print, homepage and IndexedDB journeys retained alongside correction, conflict, exact-retry and navigation checks. No test retries configured. |
+| Browser workflows | 38 tests passed. Previous registration, checklist, print, homepage and IndexedDB journeys retained alongside correction, conflict, exact-retry and navigation checks. No test retries configured. |
 | Dependencies | No packages added. Production dependency audit reports zero vulnerabilities. |
 | Original repository tools | All five Python test scripts passed; original skills remain unchanged. |
 
-A hosted foundation check exposed a checklist timing defect. A deterministic delayed-read test reproduced an older revalidation replacing a confirmed completion. Checklist reads now use request generations and abort an outstanding read before a write; responses from a departed farm cannot update the current view. Returning during an outstanding write refreshes the confirmed actions, and pending writes remain scoped to their farm. A rejected outstanding write stays visible when the worker returns before its response. The existing foundation assertion was retained.
+Preserved hosted failure context identified a route-selection defect: choosing a farm before the new page rendered could restore the previous route. A controlled route-event test reproduced it, and selection now preserves the current URL route. Additional timing tests reproduced an older checklist revalidation replacing a confirmed completion. Checklist reads now use request generations and abort an outstanding read before a write; responses from a departed farm cannot update the current view. Returning during an outstanding write refreshes the confirmed actions, and pending writes remain scoped to their farm. A rejected outstanding write stays visible when the worker returns before its response. The existing foundation assertion was retained.
 
 The browser tests commit a real correction, lose its response and retry it, then verify there is one correction event. They also exercise a second writer, unchanged permission, validation errors, history failures/empty results, small-screen reflow, keyboard operation and leaving an in-flight submission without a late redirect.
 

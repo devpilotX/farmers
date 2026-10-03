@@ -168,3 +168,65 @@ test("a failed outstanding write remains visible when the worker returns to its 
     }),
   ).toBeEnabled();
 });
+
+test("farm selection preserves the requested page before its hash change is rendered", async ({
+  page,
+  request,
+}) => {
+  const farm = await (
+    await request.post("http://127.0.0.1:8080/api/v1/farms", {
+      data: sample("Sample rapid route selection"),
+    })
+  ).json();
+  const target = await (
+    await request.post("http://127.0.0.1:8080/api/v1/farms", {
+      data: sample("Sample route target"),
+    })
+  ).json();
+  await page.addInitScript(() => {
+    let holding = false,
+      held: HashChangeEvent | undefined;
+    window.addEventListener(
+      "hashchange",
+      (event) => {
+        if (holding) {
+          held = event;
+          event.stopImmediatePropagation();
+        }
+      },
+      true,
+    );
+    const controls = window as unknown as Window & {
+      holdRoute: () => void;
+      releaseRoute: () => void;
+    };
+    controls.holdRoute = () => {
+      holding = true;
+    };
+    controls.releaseRoute = () => {
+      holding = false;
+      if (held)
+        window.dispatchEvent(
+          new HashChangeEvent("hashchange", {
+            oldURL: held.oldURL,
+            newURL: location.href,
+          }),
+        );
+    };
+  });
+  await page.goto(`/workspace#prepare?farm=${farm.id}`);
+  await expect(page.getByText("0 of 3 recorded")).toBeVisible();
+  await page.evaluate(() =>
+    (window as unknown as Window & { holdRoute: () => void }).holdRoute(),
+  );
+  await page.getByRole("link", { name: "Farmer summary", exact: true }).click();
+  await expect(page).toHaveURL(/#summary$/);
+  await page.getByLabel("Selected farm").selectOption(target.id);
+  await expect(page).toHaveURL(new RegExp(`#summary\\?farm=${target.id}$`));
+  await page.evaluate(() =>
+    (window as unknown as Window & { releaseRoute: () => void }).releaseRoute(),
+  );
+  await expect(
+    page.getByRole("heading", { name: `${target.farmerName}'s farm` }),
+  ).toBeVisible();
+});

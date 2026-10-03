@@ -212,11 +212,7 @@ export default function FieldWorkspace() {
               {isFarmView &&
                 (farm ? (
                   <>
-                    <FarmSelection
-                      farms={farms}
-                      selected={farm.id}
-                      route={route}
-                    />
+                    <FarmSelection farms={farms} selected={farm.id} />
                     {taskState.error && (
                       <div className="error-box" role="alert">
                         <p>{taskState.error}</p>
