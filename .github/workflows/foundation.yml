@@ -1,0 +1,71 @@
+name: Foundation checks
+on:
+  push:
+    branches: [main, 'foundation/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: foundation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_DB: terrafort_test
+          POSTGRES_USER: terrafort
+          POSTGRES_PASSWORD: local-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U terrafort -d terrafort_test"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    env:
+      DATABASE_URL: jdbc:postgresql://127.0.0.1:5432/terrafort_test
+      DATABASE_USER: terrafort
+      DATABASE_PASSWORD: local-only-password
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Select Java 21
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+      - name: Existing repository tests
+        run: |
+          for test in tests/test_*.py; do python3 "$test"; done
+      - name: Database integration tests and Java formatting
+        run: mvn -B -f backend/pom.xml spotless:check verify
+      - name: Frontend checks
+        working-directory: web
+        run: |
+          npm ci
+          npm run format:check
+          npm run lint
+          npm test
+          npm run build
+          npm audit --omit=dev
+      - name: Browser installation
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Start local evaluation API
+        run: |
+          SPRING_PROFILES_ACTIVE=local java -jar backend/target/terrafort-api-0.1.0.jar > /tmp/terrafort-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/actuator/health; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/terrafort-api.log
+          exit 1
+      - name: Browser workflows and accessibility checks
+        working-directory: web
+        run: npm run test:e2e

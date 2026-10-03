@@ -1,0 +1,376 @@
+openapi: 3.0.3
+info:
+  title: TerraFort foundation API
+  version: 0.1.0
+  description: Local profile is a loopback-only synthetic workspace. Non-local profiles
+    require authenticated tokens. No weather, insurance or emergency integration is
+    exposed.
+servers:
+- url: http://127.0.0.1:8080/api/v1
+security:
+- bearerAuth: []
+paths:
+  /workspace:
+    get:
+      summary: Workspace mode and playbook status
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400': &id001
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404': &id002
+          description: Record not found in the current organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409': &id003
+          description: Request identifier conflicts with another registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500': &id004
+          description: Service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: A valid bearer token is required outside the local profile
+        '403':
+          description: The token requires farms:write scope and a UUID organisation_id
+            claim
+      operationId: workspace_mode_and_playbook_status
+  /farms:
+    get:
+      summary: Latest 500 organisation-owned records, newest first
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 500
+                items:
+                  $ref: '#/components/schemas/Farm'
+        '400': *id001
+        '404': *id002
+        '409': *id003
+        '500': *id004
+        '401':
+          description: A valid bearer token is required outside the local profile
+        '403':
+          description: The token requires farms:write scope and a UUID organisation_id
+            claim
+      operationId: latest_500_organisation-owned_records_newest_first
+    post:
+      summary: Atomically register a consented farm with three illustrative actions
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Farm'
+        '400': *id001
+        '404': *id002
+        '409': *id003
+        '500': *id004
+        '401':
+          description: A valid bearer token is required outside the local profile
+        '403':
+          description: The token requires farms:write scope and a UUID organisation_id
+            claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmInput'
+      operationId: atomically_register_a_consented_farm_with_three_illustrative_actions
+  /farms/{farm}:
+    get:
+      summary: Read an organisation-owned farm
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Farm'
+        '400': *id001
+        '404': *id002
+        '409': *id003
+        '500': *id004
+        '401':
+          description: A valid bearer token is required outside the local profile
+        '403':
+          description: The token requires farms:write scope and a UUID organisation_id
+            claim
+      operationId: read_an_organisation-owned_farm
+      parameters:
+      - name: farm
+        in: path
+        required: true
+        schema: &id005
+          type: string
+          format: uuid
+  /farms/{farm}/tasks:
+    get:
+      summary: Read farm actions in plan order
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '400': *id001
+        '404': *id002
+        '409': *id003
+        '500': *id004
+        '401':
+          description: A valid bearer token is required outside the local profile
+        '403':
+          description: The token requires farms:write scope and a UUID organisation_id
+            claim
+      operationId: read_farm_actions_in_plan_order
+      parameters:
+      - name: farm
+        in: path
+        required: true
+        schema: *id005
+  /farms/{farm}/tasks/{task}:
+    put:
+      summary: Save the desired completion state; repeated writes are idempotent
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400': *id001
+        '404': *id002
+        '409': *id003
+        '500': *id004
+        '401':
+          description: A valid bearer token is required outside the local profile
+        '403':
+          description: The token requires farms:write scope and a UUID organisation_id
+            claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      operationId: save_the_desired_completion_state
+      parameters:
+      - name: farm
+        in: path
+        required: true
+        schema: *id005
+      - name: task
+        in: path
+        required: true
+        schema: *id005
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Point:
+      type: object
+      additionalProperties: false
+      required:
+      - longitude
+      - latitude
+      properties:
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+    FarmInput:
+      type: object
+      additionalProperties: false
+      required:
+      - requestId
+      - farmerName
+      - village
+      - district
+      - crop
+      - stage
+      - areaHectares
+      - assets
+      - boundary
+      - consent
+      - consentVersion
+      properties:
+        requestId: *id005
+        farmerName: &id006
+          type: string
+          minLength: 1
+          maxLength: 100
+        village: &id007
+          type: string
+          minLength: 1
+          maxLength: 100
+        district: &id008
+          type: string
+          minLength: 1
+          maxLength: 100
+        crop: &id009
+          type: string
+          enum:
+          - Paddy
+          - Maize
+          - Vegetables
+        stage: &id010
+          type: string
+          enum:
+          - Sowing
+          - Growing
+          - Ready to harvest
+        areaHectares: &id011
+          type: number
+          minimum: 0.01
+          maximum: 10000
+          multipleOf: 0.01
+        assets: &id012
+          type: string
+          maxLength: 500
+        boundary: &id013
+          type: array
+          minItems: 4
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Point'
+          description: Closed non-crossing WGS84 coordinate ring. First and final
+            point must match. This is not a surveyed cadastral boundary.
+        consent:
+          type: boolean
+          enum:
+          - true
+        consentVersion: &id014
+          type: string
+          enum:
+          - registry-v1-en
+    Farm:
+      type: object
+      additionalProperties: false
+      required:
+      - farmerName
+      - village
+      - district
+      - crop
+      - stage
+      - areaHectares
+      - assets
+      - boundary
+      - consentVersion
+      - id
+      - consentAt
+      - createdAt
+      properties:
+        farmerName: *id006
+        village: *id007
+        district: *id008
+        crop: *id009
+        stage: *id010
+        areaHectares: *id011
+        assets: *id012
+        boundary: *id013
+        consentVersion: *id014
+        id: *id005
+        consentAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    Task:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - farmId
+      - title
+      - detail
+      - completed
+      - updatedAt
+      properties:
+        id: *id005
+        farmId: *id005
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        detail:
+          type: string
+          minLength: 1
+          maxLength: 500
+        completed:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+    TaskInput:
+      type: object
+      additionalProperties: false
+      required:
+      - completed
+      properties:
+        completed:
+          type: boolean
+    Error:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      - requestId
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+        requestId: *id005
+    Workspace:
+      type: object
+      additionalProperties: false
+      required:
+      - mode
+      - playbookStatus
+      properties:
+        mode:
+          type: string
+          enum:
+          - local-demo
+          - authenticated
+        playbookStatus:
+          type: string
+          enum:
+          - illustrative-not-approved
