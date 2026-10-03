@@ -16,7 +16,7 @@ Forest green, pale agricultural neutrals and a serif display heading give the wo
 
 This single application uses one semantic-token stylesheet, not a separate design-system package. SVGs are used for the logo, functional icons and the actual stored-boundary schematic. No licensed farm photographs exist in the source repository. No external photography was fetched, and no generated picture is presented as an authentic farmer photograph. Add approved, credited field photography at the next visual-content gate.
 
-Loading, empty, failed and partial-data states are explicit. A missing action response is never displayed as zero completed actions. Failed submissions preserve the entered values. Saved checklist changes are pessimistic: the interface confirms success only after the server responds. Offline storage and queueing are not implemented; a connection is required to save.
+Loading, empty, failed and partial-data states are explicit. A missing action response is never displayed as zero completed actions. Failed submissions preserve the entered values. Saved checklist changes are pessimistic: the interface confirms success only after the server responds. The foundation required a connection to save. The later [connection-safe capture phase](decisions/0003-connection-safe-registration.md) adds sample drafts and pending submissions; full offline operation is still not implemented.
 
 Declarative JSX in the page shell and registration form exceeds the skills' default function-line budget. Each stays below the 300-line file budget and represents one screen; business decisions, validation, fetching and database writes are separate. The stylesheet is a token and responsive-rule catalogue, not application logic.
 
