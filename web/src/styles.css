@@ -149,9 +149,7 @@ svg {
   color: #d5dfd4;
   font-size: 16px;
   border-radius: 8px;
-  transition:
-    background 200ms,
-    color 200ms;
+  transition: none;
 }
 .sidebar nav a:hover {
   background: #244d3e;

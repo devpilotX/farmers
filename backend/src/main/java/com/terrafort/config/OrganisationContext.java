@@ -17,6 +17,10 @@ public class OrganisationContext {
     this.environment = environment;
   }
 
+  public boolean isLocal() {
+    return environment.matchesProfiles("local");
+  }
+
   public UUID current() {
     if (environment.matchesProfiles("local")) return DEMO_ORGANISATION;
     var authentication = SecurityContextHolder.getContext().getAuthentication();

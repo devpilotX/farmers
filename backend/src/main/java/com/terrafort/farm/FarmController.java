@@ -27,7 +27,8 @@ public class FarmController {
 
   @GetMapping("/workspace")
   public Map<String, Object> workspace() {
-    boolean demo = organisation.current().equals(OrganisationContext.DEMO_ORGANISATION);
+    organisation.current();
+    boolean demo = organisation.isLocal();
     return Map.of(
         "mode",
         demo ? "local-demo" : "authenticated",
