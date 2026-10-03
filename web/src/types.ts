@@ -1,0 +1,32 @@
+export type Point = { longitude: number; latitude: number };
+export type Farm = {
+  id: string;
+  farmerName: string;
+  village: string;
+  district: string;
+  crop: string;
+  stage: string;
+  areaHectares: number;
+  assets: string;
+  boundary: Point[];
+  consentVersion: string;
+  consentAt: string;
+  createdAt: string;
+};
+export type FarmInput = Omit<Farm, "id" | "consentAt" | "createdAt"> & {
+  requestId: string;
+  consent: boolean;
+};
+export type Task = {
+  id: string;
+  farmId: string;
+  title: string;
+  detail: string;
+  completed: boolean;
+  updatedAt: string;
+};
+export type Workspace = {
+  mode: "local-demo" | "authenticated";
+  playbookStatus: string;
+};
+export type Route = "overview" | "farms" | "prepare" | "summary" | "register";
