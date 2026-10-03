@@ -2,9 +2,8 @@ openapi: 3.0.3
 info:
   title: TerraFort foundation API
   version: 0.1.0
-  description: Local profile is a loopback-only synthetic workspace. Non-local profiles
-    require authenticated tokens. No weather, insurance or emergency integration is
-    exposed.
+  description: Local profile is a loopback-only synthetic workspace. Non-local profiles require authenticated
+    tokens. No weather, insurance or emergency integration is exposed.
 servers:
 - url: http://127.0.0.1:8080/api/v1
 security:
@@ -47,8 +46,7 @@ paths:
         '401':
           description: A valid bearer token is required outside the local profile
         '403':
-          description: The token requires farms:write scope and a UUID organisation_id
-            claim
+          description: The token requires farms:write scope and a UUID organisation_id claim
       operationId: workspace_mode_and_playbook_status
   /farms:
     get:
@@ -70,8 +68,7 @@ paths:
         '401':
           description: A valid bearer token is required outside the local profile
         '403':
-          description: The token requires farms:write scope and a UUID organisation_id
-            claim
+          description: The token requires farms:write scope and a UUID organisation_id claim
       operationId: latest_500_organisation-owned_records_newest_first
     post:
       summary: Atomically register a consented farm with three illustrative actions
@@ -89,8 +86,7 @@ paths:
         '401':
           description: A valid bearer token is required outside the local profile
         '403':
-          description: The token requires farms:write scope and a UUID organisation_id
-            claim
+          description: The token requires farms:write scope and a UUID organisation_id claim
       requestBody:
         required: true
         content:
@@ -115,16 +111,63 @@ paths:
         '401':
           description: A valid bearer token is required outside the local profile
         '403':
-          description: The token requires farms:write scope and a UUID organisation_id
-            claim
+          description: The token requires farms:write scope and a UUID organisation_id claim
       operationId: read_an_organisation-owned_farm
-      parameters:
+      parameters: &id005
       - name: farm
         in: path
         required: true
-        schema: &id005
+        schema: &id006
           type: string
           format: uuid
+    put:
+      summary: Correct reviewed farm details without changing identity or consent
+      description: Requires the current expectedVersion. Exact request retries return the current record
+        without another correction. No-change requests fail. Corrections preserve original registration
+        keys and checklist.
+      operationId: correct_farm_details
+      parameters: *id005
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionInput'
+      responses:
+        '200':
+          description: Confirmed current farm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Farm'
+        '400': &id007
+          description: Invalid input, unreviewed correction or NO_CHANGES
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401': &id008
+          description: Valid bearer token required outside the local profile
+        '403': &id009
+          description: farms:write scope and UUID organisation_id required
+        '404': &id010
+          description: Farm not found in this organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409': &id011
+          description: VERSION_CONFLICT or REQUEST_CONFLICT; no mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500': &id012
+          description: Service error; retry the same request identifier and body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /farms/{farm}/tasks:
     get:
       summary: Read farm actions in plan order
@@ -144,14 +187,13 @@ paths:
         '401':
           description: A valid bearer token is required outside the local profile
         '403':
-          description: The token requires farms:write scope and a UUID organisation_id
-            claim
+          description: The token requires farms:write scope and a UUID organisation_id claim
       operationId: read_farm_actions_in_plan_order
       parameters:
       - name: farm
         in: path
         required: true
-        schema: *id005
+        schema: *id006
   /farms/{farm}/tasks/{task}:
     put:
       summary: Save the desired completion state; repeated writes are idempotent
@@ -169,8 +211,7 @@ paths:
         '401':
           description: A valid bearer token is required outside the local profile
         '403':
-          description: The token requires farms:write scope and a UUID organisation_id
-            claim
+          description: The token requires farms:write scope and a UUID organisation_id claim
       requestBody:
         required: true
         content:
@@ -182,11 +223,34 @@ paths:
       - name: farm
         in: path
         required: true
-        schema: *id005
+        schema: *id006
       - name: task
         in: path
         required: true
-        schema: *id005
+        schema: *id006
+  /farms/{farm}/history:
+    get:
+      summary: Latest 100 organisation-owned record events, newest first
+      description: Older events contain type/time only. Correction events contain a reason, version and
+        field names, not previous values or a verified actor. This is not a complete archive.
+      operationId: farm_record_history
+      parameters: *id005
+      responses:
+        '200':
+          description: Bounded history
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: '#/components/schemas/RecordEvent'
+        '400': *id007
+        '401': *id008
+        '403': *id009
+        '404': *id010
+        '409': *id011
+        '500': *id012
 components:
   securitySchemes:
     bearerAuth:
@@ -225,52 +289,52 @@ components:
       - consent
       - consentVersion
       properties:
-        requestId: *id005
-        farmerName: &id006
+        requestId: *id006
+        farmerName: &id013
           type: string
           minLength: 1
           maxLength: 100
-        village: &id007
+        village: &id014
           type: string
           minLength: 1
           maxLength: 100
-        district: &id008
+        district: &id015
           type: string
           minLength: 1
           maxLength: 100
-        crop: &id009
+        crop: &id016
           type: string
           enum:
           - Paddy
           - Maize
           - Vegetables
-        stage: &id010
+        stage: &id017
           type: string
           enum:
           - Sowing
           - Growing
           - Ready to harvest
-        areaHectares: &id011
+        areaHectares: &id018
           type: number
           minimum: 0.01
           maximum: 10000
           multipleOf: 0.01
-        assets: &id012
+        assets: &id019
           type: string
           maxLength: 500
-        boundary: &id013
+        boundary: &id020
           type: array
           minItems: 4
           maxItems: 100
           items:
             $ref: '#/components/schemas/Point'
-          description: Closed non-crossing WGS84 coordinate ring. First and final
-            point must match. This is not a surveyed cadastral boundary.
+          description: Closed non-crossing WGS84 coordinate ring. First and final point must match. This
+            is not a surveyed cadastral boundary.
         consent:
           type: boolean
           enum:
           - true
-        consentVersion: &id014
+        consentVersion: &id021
           type: string
           enum:
           - registry-v1-en
@@ -290,21 +354,30 @@ components:
       - id
       - consentAt
       - createdAt
+      - version
+      - updatedAt
       properties:
-        farmerName: *id006
-        village: *id007
-        district: *id008
-        crop: *id009
-        stage: *id010
-        areaHectares: *id011
-        assets: *id012
-        boundary: *id013
-        consentVersion: *id014
-        id: *id005
+        farmerName: *id013
+        village: *id014
+        district: *id015
+        crop: *id016
+        stage: *id017
+        areaHectares: *id018
+        assets: *id019
+        boundary: *id020
+        consentVersion: *id021
+        id: *id006
         consentAt:
           type: string
           format: date-time
         createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        updatedAt:
           type: string
           format: date-time
     Task:
@@ -318,8 +391,8 @@ components:
       - completed
       - updatedAt
       properties:
-        id: *id005
-        farmId: *id005
+        id: *id006
+        farmId: *id006
         title:
           type: string
           minLength: 1
@@ -357,7 +430,7 @@ components:
           type: string
           minLength: 1
           maxLength: 500
-        requestId: *id005
+        requestId: *id006
     Workspace:
       type: object
       additionalProperties: false
@@ -374,3 +447,70 @@ components:
           type: string
           enum:
           - illustrative-not-approved
+    CorrectionInput:
+      type: object
+      additionalProperties: false
+      required:
+      - crop
+      - stage
+      - areaHectares
+      - assets
+      - boundary
+      - requestId
+      - expectedVersion
+      - reason
+      - reviewed
+      properties:
+        crop: *id016
+        stage: *id017
+        areaHectares: *id018
+        assets: *id019
+        boundary: *id020
+        requestId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 300
+        reviewed:
+          type: boolean
+          enum:
+          - true
+    RecordEvent:
+      type: object
+      required:
+      - id
+      - eventType
+      - recordedAt
+      - changedFields
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+        recordVersion:
+          type: integer
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+        changedFields:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+            enum:
+            - crop
+            - stage
+            - areaHectares
+            - assets
+            - boundary

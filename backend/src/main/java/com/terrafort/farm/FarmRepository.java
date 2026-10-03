@@ -34,6 +34,32 @@ public class FarmRepository {
         .findFirst();
   }
 
+  public Optional<FarmRecord> lock(UUID id, UUID organisation) {
+    return jdbc
+        .query(
+            "SELECT * FROM farm WHERE id=? AND organisation_id=? FOR UPDATE",
+            this::row,
+            id,
+            organisation)
+        .stream()
+        .findFirst();
+  }
+
+  public void correct(UUID id, UUID organisation, CorrectionInput input) {
+    jdbc.update(
+        """
+      UPDATE farm SET crop=?,stage=?,area_hectares=?,assets=?,boundary=?::jsonb,
+      version=version+1,updated_at=clock_timestamp() WHERE id=? AND organisation_id=?
+      """,
+        input.crop(),
+        input.stage(),
+        input.areaHectares(),
+        input.assets().trim(),
+        encode(input.boundary()),
+        id,
+        organisation);
+  }
+
   public Optional<FarmRecord> replay(FarmInput input, UUID organisation, String hash) {
     var existing =
         jdbc.queryForList(
@@ -101,6 +127,8 @@ public class FarmRepository {
         boundary,
         row.getString("consent_version"),
         row.getTimestamp("consent_at").toInstant(),
-        row.getTimestamp("created_at").toInstant());
+        row.getTimestamp("created_at").toInstant(),
+        row.getInt("version"),
+        row.getTimestamp("updated_at").toInstant());
   }
 }
