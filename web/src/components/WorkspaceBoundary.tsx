@@ -13,8 +13,8 @@ export class WorkspaceBoundary extends Component<
       <main className="route-message">
         <h1>The workspace could not be opened.</h1>
         <p>
-          Check your connection and try again. No farm registration was
-          submitted.
+          Check your connection and try again. If you were saving a record,
+          check the registry before submitting it again.
         </p>
         <button className="button primary" onClick={() => location.reload()}>
           Retry workspace
