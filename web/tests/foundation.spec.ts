@@ -48,7 +48,7 @@ test("server failure is visible and retry recovers", async ({ page }) => {
       body: JSON.stringify({ message: "Temporary test outage" }),
     }),
   );
-  await page.goto("/");
+  await page.goto("/workspace");
   await expect(page.getByRole("alert")).toContainText("Temporary test outage");
   await page.unroute("**/api/v1/farms");
   await page.getByRole("button", { name: "Try again" }).click();
@@ -62,7 +62,7 @@ test("empty registry, failed actions, mobile navigation and keyboard entry", asy
   await page.route("**/api/v1/farms", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
-  await page.goto("/");
+  await page.goto("/workspace");
   await expect(page.getByText("Your first farm starts here.")).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(
@@ -193,7 +193,7 @@ test("pending workspace requests render loading rather than empty totals", async
     await gate;
     await route.continue();
   });
-  await page.goto("/");
+  await page.goto("/workspace");
   await expect(page.getByText("Loading the farm workspace...")).toBeVisible();
   await expect(page.getByText("Your first farm starts here.")).toBeHidden();
   release();
