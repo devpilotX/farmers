@@ -6,6 +6,8 @@ const routes: Route[] = [
   "summary",
   "register",
   "pending",
+  "edit",
+  "history",
 ];
 export function currentRoute(): Route {
   const route = location.hash.slice(1).split("?")[0] as Route;
@@ -16,4 +18,11 @@ export function selectedFarm(): string {
 }
 export function navigate(route: Route, farm?: string) {
   location.hash = route + (farm ? `?farm=${encodeURIComponent(farm)}` : "");
+}
+
+export function acceptNavigation(previousUrl: string): boolean {
+  const guard = new Event("terrafort:before-route", { cancelable: true });
+  if (window.dispatchEvent(guard)) return true;
+  history.replaceState(null, "", previousUrl);
+  return false;
 }

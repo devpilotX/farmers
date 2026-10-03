@@ -48,6 +48,23 @@ export function Summary({
               <dt>Registration date</dt>
               <dd>{new Date(farm.createdAt).toLocaleDateString("en-IN")}</dd>
             </div>
+            {farm.version && (
+              <div>
+                <dt>Record version</dt>
+                <dd>{farm.version}</dd>
+              </div>
+            )}
+            {farm.updatedAt && (
+              <div>
+                <dt>Last updated</dt>
+                <dd>
+                  {new Date(farm.updatedAt).toLocaleString("en-IN", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </dd>
+              </div>
+            )}
             <div>
               <dt>Record reference</dt>
               <dd className="record-reference">{farm.id}</dd>
@@ -80,6 +97,14 @@ export function Summary({
             {farm.consentVersion}.
           </p>
         </div>
+      </div>
+      <div className="capture-actions no-print">
+        <a className="button secondary" href={`#edit?farm=${farm.id}`}>
+          Correct farm details
+        </a>
+        <a className="text-button" href={`#history?farm=${farm.id}`}>
+          Record history <Icon name="arrow" />
+        </a>
       </div>
       <p className="plan-disclaimer">
         This record does not confirm insurance cover, predict flood damage or
