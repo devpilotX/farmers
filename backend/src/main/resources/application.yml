@@ -1,0 +1,29 @@
+server:
+  port: 8080
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 64KB
+spring:
+  application:
+    name: terrafort
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:5432/terrafort}
+    username: ${DATABASE_USER:terrafort}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 5000
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  sql:
+    init:
+      mode: never
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
