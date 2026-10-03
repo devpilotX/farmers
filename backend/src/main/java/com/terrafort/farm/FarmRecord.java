@@ -17,4 +17,6 @@ public record FarmRecord(
     List<FarmInput.Point> boundary,
     String consentVersion,
     Instant consentAt,
-    Instant createdAt) {}
+    Instant createdAt,
+    int version,
+    Instant updatedAt) {}

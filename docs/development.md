@@ -92,7 +92,7 @@ The original HTML prototype is retained for reference. `web/` is the application
 
 The non-local backend requires an OIDC JWT with the configured issuer, audience, `farms:write` scope and UUID `organisation_id` claim. The local profile deliberately has no sign-in and must only hold synthetic data. Browser sign-in and an identity provider have not been connected.
 
-Local-language consent, offline capture and synchronisation, an approved district playbook, correction and withdrawal workflows, deployment secrets, TLS, encryption, retention and operational backup ownership are release gates. Official weather, messaging, insurance, damage evidence and recovery integrations are outside this foundation.
+Local-language consent, offline capture and synchronisation, an approved district playbook, identity correction and withdrawal workflows, deployment secrets, TLS, encryption, retention and operational backup ownership are release gates. Official weather, messaging, insurance, damage evidence and recovery integrations are outside this foundation.
 
 No production deployment or CD rollout is configured because no approved hosting target or credentials were supplied. CI prepares and verifies the foundation; it does not represent a live farmer service. See [the foundation record](foundation.md) for the next gate.
 
@@ -109,3 +109,17 @@ In a verified `local-demo` workspace on a loopback host, registration can save a
 The queue holds at most 20 copies. One partial draft is kept per browser, with revision checks against stale-tab changes. Drafts and pending copies expire after seven days and are removed on the next store read, not by a background deletion timer. Expiry and discarding affect browser copies, not server farms. Check the registry if a submission was attempted before discarding or recreating it. Device storage is not encrypted or a backup, and the browser may clear it.
 
 Authenticated mode never opens the sample store. Refresh requires the API to verify workspace mode; this phase does not provide offline cold start or cached authenticated data. No background retry or offline checklist write is implemented. See [the capture decision](decisions/0003-connection-safe-registration.md).
+
+
+## Reviewed farm corrections
+
+From the farmer summary, open **Correct farm details**. Only crop, stage, reported area, assets and boundary can change. Supply a short reason and confirm review. Permission, identity, location and action progress are not rewritten.
+
+`PUT /api/v1/farms/{farm}` requires the expected version and a stable correction request UUID. An exact retry returns the current farm; a different body with the same key or a stale version receives `409`. No-change requests receive `400`. Keep an unconfirmed form open for an exact retry, or inspect history before starting a different submission. There is no offline correction queue.
+
+`GET /api/v1/farms/{farm}/history` returns at most 100 events. It contains correction reasons and field names, not before/after values or verified actor attribution. Both routes use the existing organisation and scope checks.
+
+Flyway V3 adds version/update-time fields and nullable correction audit metadata. Back up the database before an upgrade. The evaluation migration was checked against existing records and a separately restored backup; production migration timing, encryption, retention and operational recovery ownership still need approval. See [decision 0004](decisions/0004-reviewed-farm-corrections.md) and [the verification record](record-corrections.md).
+
+
+The CI runner uses native Git to fetch the exact event commit from this public repository, without persisting checkout credentials, and selects an installed Node 24 tool-cache entry. It fails if that runtime is absent. A move to a private repository needs a separately reviewed checkout authentication change. Browser failures print their error contexts into the job log; tests still have zero retries.

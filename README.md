@@ -27,6 +27,8 @@ The current product connects three steps:
 
 The public homepage explains this workflow. The separate field workspace handles the records and actions.
 
+A saved farm can be corrected after review without creating a second registration. Crop, stage, area, assets and the recorded boundary can change; identity, original permission and completed actions stay together. Record history shows the changed fields, the reason and the new version. It does not reconstruct previous values.
+
 For local sample evaluation, the registration form can keep a partial draft or a fixed pending submission in the browser. Pending copies are sent only on request; retrying the same copy does not create a second farm when a response is lost. This is not full offline operation or approved storage for real farmer information.
 
 ## Who it is for
@@ -40,6 +42,8 @@ For local sample evaluation, the registration form can keep a partial draft or a
 ## How the product works
 
 The React interface submits a farm record to a Spring Boot API. The API validates the information and saves the farm, consent record, initial actions and audit event in one PostgreSQL transaction. A repeated registration request returns the same record rather than creating a duplicate.
+
+Corrections require the version the worker reviewed. If another correction has already been saved, the API rejects the stale submission instead of overwriting it. Matching retries write only once, and the corrected farm and its history event are committed together.
 
 Checklist updates save the requested completion state. The farmer summary reads the saved records. Organisation-level access checks are enforced by the API; a boundary drawing or browser control is never treated as authorisation.
 
@@ -55,4 +59,4 @@ The current workspace is an evaluation release for sample records. Its checklist
 
 A farm record does not confirm insurance cover, predict a flood or guarantee compensation. Permission to keep a record does not automatically permit sharing it with a bank or insurer. Software cannot stop a flood; official authorities take priority during an emergency.
 
-[Product blueprint](terrafort-complete-blueprint.md) · [Architecture](docs/decisions/0001-foundation.md) · [API contract](docs/openapi.yml) · [Developer guide](docs/development.md)
+[Product blueprint](terrafort-complete-blueprint.md) · [Architecture](docs/decisions/0001-foundation.md) · [Record corrections](docs/record-corrections.md) · [API contract](docs/openapi.yml) · [Developer guide](docs/development.md)

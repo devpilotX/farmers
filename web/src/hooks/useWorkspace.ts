@@ -8,6 +8,10 @@ export function useWorkspace() {
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   const reload = useCallback(() => setRevision((value) => value + 1), []);
+  const refresh = useCallback(() => {
+    setLoading(true);
+    setRevision((value) => value + 1);
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -32,5 +36,10 @@ export function useWorkspace() {
       });
     return () => controller.abort();
   }, [revision]);
-  return { farms, workspace, error, loading, reload };
+  const replace = useCallback((farm: Farm) => {
+    setFarms((records) =>
+      records.map((record) => (record.id === farm.id ? farm : record)),
+    );
+  }, []);
+  return { farms, workspace, error, loading, reload, refresh, replace };
 }

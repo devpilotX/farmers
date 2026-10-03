@@ -1,13 +1,11 @@
-import type { Farm, Route } from "../types";
-import { navigate } from "../navigation";
+import type { Farm } from "../types";
+import { currentRoute, navigate } from "../navigation";
 export function FarmSelection({
   farms,
   selected,
-  route,
 }: {
   farms: Farm[];
   selected: string;
-  route: Route;
 }) {
   return (
     <div className="farm-selection no-print">
@@ -15,7 +13,7 @@ export function FarmSelection({
       <select
         id="selected-farm"
         value={selected}
-        onChange={(event) => navigate(route, event.target.value)}
+        onChange={(event) => navigate(currentRoute(), event.target.value)}
       >
         {farms.map((farm) => (
           <option value={farm.id} key={farm.id}>

@@ -4,13 +4,20 @@ import { Icon } from "./components/Icon";
 import { FarmSelection } from "./components/FarmSelection";
 import { useWorkspace } from "./hooks/useWorkspace";
 import { useTasks } from "./hooks/useTasks";
-import { currentRoute, selectedFarm, navigate } from "./navigation";
+import {
+  currentRoute,
+  selectedFarm,
+  navigate,
+  acceptNavigation,
+} from "./navigation";
 import { Overview } from "./pages/Overview";
 import { Registry } from "./pages/Registry";
 import { Registration } from "./pages/Registration";
 import { Preparedness } from "./pages/Preparedness";
 import { PendingRecords } from "./pages/PendingRecords";
 import { localCaptureAllowed } from "./local/records";
+import { Correction } from "./pages/Correction";
+import { History } from "./pages/History";
 import { Summary } from "./pages/Summary";
 const titles = {
   overview: "Farm preparedness",
@@ -19,19 +26,27 @@ const titles = {
   prepare: "Preparedness plan",
   summary: "Farmer summary",
   pending: "Pending registrations",
+  edit: "Correct farm details",
+  history: "Farm record history",
 };
 export default function FieldWorkspace() {
   const [route, setRoute] = useState(currentRoute);
   const [selected, setSelected] = useState(selectedFarm);
   const [revision, setRevision] = useState(0);
   const [notice, setNotice] = useState("");
-  const { farms, workspace, error, loading, reload } = useWorkspace();
+  const [noticeFarm, setNoticeFarm] = useState("");
+  const { farms, workspace, error, loading, reload, refresh, replace } =
+    useWorkspace();
   const farm =
     farms.find((farm) => farm.id === selected) ??
     (!selected ? farms[0] : undefined);
   const taskState = useTasks(farm?.id ?? "", revision);
   useEffect(() => {
-    const change = () => {
+    const change = (event: HashChangeEvent) => {
+      if (!acceptNavigation(event.oldURL)) {
+        event.stopImmediatePropagation();
+        return;
+      }
       setRoute(currentRoute());
       setSelected(selectedFarm());
       requestAnimationFrame(() =>
@@ -50,6 +65,7 @@ export default function FieldWorkspace() {
   const localCapture = localCaptureAllowed(workspace?.mode, location.hostname);
   const captureView =
     localCapture && (route === "register" || route === "pending");
+  const isRecordView = route === "edit" || route === "history";
   const isFarmView = route === "prepare" || route === "summary";
   return (
     <>
@@ -105,11 +121,13 @@ export default function FieldWorkspace() {
                 : "Local evaluation only. Use sample records, never real farmer data. No live weather or insurance service is connected."}
             </p>
           </div>
-          {notice && (
-            <p className="success-notice" role="status">
-              {notice}
-            </p>
-          )}
+          {notice &&
+            noticeFarm === farm?.id &&
+            (route === "summary" || route === "history") && (
+              <p className="success-notice" role="status">
+                {notice}
+              </p>
+            )}
           {loading ? (
             <div className="empty-state" role="status">
               Loading the farm workspace...
@@ -151,6 +169,7 @@ export default function FieldWorkspace() {
                   onSaved={(farm) => {
                     reload();
                     setRevision((value) => value + 1);
+                    setNoticeFarm(farm.id);
                     setNotice(
                       "Farm record saved. Its preparedness checklist is ready.",
                     );
@@ -158,14 +177,42 @@ export default function FieldWorkspace() {
                   }}
                 />
               )}
+              {isRecordView &&
+                (farm ? (
+                  route === "edit" ? (
+                    <Correction
+                      key={farm.id + ":" + farm.version}
+                      farm={farm}
+                      onRefresh={refresh}
+                      onSaved={(saved) => {
+                        replace(saved);
+                        setRevision((value) => value + 1);
+                        setNoticeFarm(saved.id);
+                        setNotice(
+                          "Reviewed correction saved. Original permission and actions are unchanged.",
+                        );
+                        navigate("summary", saved.id);
+                      }}
+                    />
+                  ) : (
+                    <History key={farm.id} farm={farm} />
+                  )
+                ) : (
+                  <section className="empty-state">
+                    <h2>Farm not found in this workspace</h2>
+                    <p>
+                      Open a saved farm from the registry before reviewing its
+                      details.
+                    </p>
+                    <a className="button secondary" href="#farms">
+                      Open farm registry
+                    </a>
+                  </section>
+                ))}
               {isFarmView &&
                 (farm ? (
                   <>
-                    <FarmSelection
-                      farms={farms}
-                      selected={farm.id}
-                      route={route}
-                    />
+                    <FarmSelection farms={farms} selected={farm.id} />
                     {taskState.error && (
                       <div className="error-box" role="alert">
                         <p>{taskState.error}</p>
