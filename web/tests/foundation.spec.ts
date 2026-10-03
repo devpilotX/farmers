@@ -140,6 +140,7 @@ test("keyboard registration, invalid coordinates and failed save preserve entere
   await expect(
     page.getByRole("heading", { name: "Register a farm", exact: true }),
   ).toBeVisible();
+  await expect(page.getByLabel("Farmer name", { exact: true })).toBeEnabled();
   await page.getByLabel("Farmer name", { exact: true }).focus();
   await page.keyboard.type("Keyboard sample");
   await page.keyboard.press("Tab");

@@ -101,3 +101,11 @@ No production deployment or CD rollout is configured because no approved hosting
 The build renders the public homepage into `dist/index.html` and creates a non-indexed workspace entry at `dist/workspace/index.html`. The homepage reads no farm data. The field workspace is a separate lazy-loaded bundle; legacy root hash links remain supported. A static host must serve these entry files and preserve their asset paths. API routing and sign-in still require a separately approved deployment.
 
 The production preview used by browser tests runs on port 4173; the development server uses 5173. Browser checks cover both rendered HTML without JavaScript and hydration with JavaScript, as well as the existing database-backed workflows.
+
+## Connection-safe sample capture
+
+In a verified `local-demo` workspace on a loopback host, registration can save a partial sample draft or retain a fixed submitted copy in IndexedDB. Drafts never retain the permission checkbox. Pending copies keep the original request identifier and payload; send them from **Pending registrations** rather than entering the same farm again after an interrupted response.
+
+The queue holds at most 20 copies. One partial draft is kept per browser, with revision checks against stale-tab changes. Drafts and pending copies expire after seven days and are removed on the next store read, not by a background deletion timer. Expiry and discarding affect browser copies, not server farms. Check the registry if a submission was attempted before discarding or recreating it. Device storage is not encrypted or a backup, and the browser may clear it.
+
+Authenticated mode never opens the sample store. Refresh requires the API to verify workspace mode; this phase does not provide offline cold start or cached authenticated data. No background retry or offline checklist write is implemented. See [the capture decision](decisions/0003-connection-safe-registration.md).

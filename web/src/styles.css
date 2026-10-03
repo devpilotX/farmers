@@ -1107,3 +1107,86 @@ textarea {
     background: #fff;
   }
 }
+
+.capture-note {
+  background: var(--surface-soft, #f3f5ec);
+  border-left: 3px solid #a6b979;
+  padding: 16px;
+  margin: 24px 0;
+  line-height: 1.5;
+}
+.capture-note p {
+  margin: 8px 0 0;
+}
+.capture-note a {
+  text-decoration: underline;
+  font-weight: 600;
+}
+.capture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 24px;
+}
+.pending-record {
+  border-top: 1px solid var(--color-border);
+  padding: 24px 0;
+}
+.pending-record:last-child {
+  padding-bottom: 0;
+}
+.pending-record-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.pending-record-heading h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.pending-record-heading p {
+  color: var(--color-muted);
+  margin: 8px 0 0;
+}
+.pending-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.pending-facts dt {
+  color: var(--color-muted);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.pending-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pending-record details summary {
+  cursor: pointer;
+  min-height: 48px;
+  padding: 12px 0;
+  font-weight: 600;
+}
+.pending-boundary {
+  padding: 16px;
+  background: #f3f5ec;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .pending-facts {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .pending-record-heading {
+    flex-direction: column;
+  }
+  .capture-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+}

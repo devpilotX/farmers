@@ -29,4 +29,5 @@ export type Workspace = {
   mode: "local-demo" | "authenticated";
   playbookStatus: string;
 };
-export type Route = "overview" | "farms" | "prepare" | "summary" | "register";
+export type Route =
+  "overview" | "farms" | "prepare" | "summary" | "register" | "pending";

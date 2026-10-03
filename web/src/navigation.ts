@@ -1,5 +1,12 @@
 import type { Route } from "./types";
-const routes: Route[] = ["overview", "farms", "prepare", "summary", "register"];
+const routes: Route[] = [
+  "overview",
+  "farms",
+  "prepare",
+  "summary",
+  "register",
+  "pending",
+];
 export function currentRoute(): Route {
   const route = location.hash.slice(1).split("?")[0] as Route;
   return routes.includes(route) ? route : "overview";

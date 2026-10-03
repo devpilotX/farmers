@@ -27,6 +27,8 @@ The current product connects three steps:
 
 The public homepage explains this workflow. The separate field workspace handles the records and actions.
 
+For local sample evaluation, the registration form can keep a partial draft or a fixed pending submission in the browser. Pending copies are sent only on request; retrying the same copy does not create a second farm when a response is lost. This is not full offline operation or approved storage for real farmer information.
+
 ## Who it is for
 
 **Farmers and households** need a record they can understand with a trusted field worker. The intended farmer service is free or institution-sponsored.
