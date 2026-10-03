@@ -120,3 +120,6 @@ From the farmer summary, open **Correct farm details**. Only crop, stage, report
 `GET /api/v1/farms/{farm}/history` returns at most 100 events. It contains correction reasons and field names, not before/after values or verified actor attribution. Both routes use the existing organisation and scope checks.
 
 Flyway V3 adds version/update-time fields and nullable correction audit metadata. Back up the database before an upgrade. The evaluation migration was checked against existing records and a separately restored backup; production migration timing, encryption, retention and operational recovery ownership still need approval. See [decision 0004](decisions/0004-reviewed-farm-corrections.md) and [the verification record](record-corrections.md).
+
+
+The CI runner uses native Git to fetch the exact event commit from this public repository, without persisting checkout credentials, and selects an installed Node 24 tool-cache entry. It fails if that runtime is absent. A move to a private repository needs a separately reviewed checkout authentication change. Browser failures print their error contexts into the job log; tests still have zero retries.
