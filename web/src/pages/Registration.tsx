@@ -1,49 +1,32 @@
-import { useRef, useState } from "react";
-import { api } from "../api";
-import { parseBoundary } from "../boundary";
+import { useRegistration } from "../hooks/useRegistration";
 import { Icon } from "../components/Icon";
 import type { Farm } from "../types";
 const consentText =
   "I give permission to record my name, village, crop, assets and plot boundary for assisted farm registration and preparedness. This does not permit sharing with an insurer or bank. I understand this local demo must contain sample data only.";
-export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
-  const requestId = useRef(crypto.randomUUID());
-  async function submit(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (saving) return;
-    const form = new FormData(event.currentTarget);
-    setSaving(true);
-    setError("");
-    try {
-      const farm = await api.register({
-        requestId: requestId.current,
-        farmerName: String(form.get("farmerName")),
-        village: String(form.get("village")),
-        district: String(form.get("district")),
-        crop: String(form.get("crop")),
-        stage: String(form.get("stage")),
-        areaHectares: Number(form.get("areaHectares")),
-        assets: String(form.get("assets")),
-        boundary: parseBoundary(String(form.get("boundary"))),
-        consent: form.get("consent") === "on",
-        consentVersion: "registry-v1-en",
-      });
-      setDirty(false);
-      onSaved(farm);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Could not save this farm. Your entries are still here.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
+export function Registration({
+  onSaved,
+  onQueued,
+  localCapture,
+}: {
+  onSaved: (farm: Farm) => void;
+  onQueued: () => void;
+  localCapture: boolean;
+}) {
+  const {
+    formRef,
+    error,
+    notice,
+    saving,
+    dirty,
+    queued,
+    loading,
+    setDirty,
+    submit,
+  } = useRegistration(localCapture, onSaved, onQueued);
+  const locked = saving || queued || loading;
   return (
     <form
+      ref={formRef}
       className="panel registration"
       onSubmit={submit}
       onChange={() => setDirty(true)}
@@ -57,10 +40,31 @@ export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
           </p>
         </div>
         <span className="tag neutral">
-          {dirty ? "Unsaved entries" : "New record"}
+          {queued
+            ? "Pending confirmation"
+            : dirty
+              ? "Unsaved entries"
+              : "New record"}
         </span>
       </div>
-      <fieldset disabled={saving}>
+      {localCapture && (
+        <div className="capture-note">
+          <strong>Sample capture on this device</strong>
+          <p>
+            One sample draft is kept in this browser. Saving it again replaces
+            the reviewed copy. A submitted sample is kept pending until the API
+            confirms it. Copies expire after seven days; this is not an
+            encrypted backup. Never enter real farmer information.
+          </p>
+        </div>
+      )}
+      {loading && <p role="status">Checking saved device entries...</p>}
+      {notice && (
+        <p className="success-notice" role="status">
+          {notice}
+        </p>
+      )}
+      <fieldset disabled={locked}>
         <legend>
           <span>01</span>Farmer and location
         </legend>
@@ -84,7 +88,7 @@ export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
           </label>
         </div>
       </fieldset>
-      <fieldset disabled={saving}>
+      <fieldset disabled={locked}>
         <legend>
           <span>02</span>Crop and assets
         </legend>
@@ -126,7 +130,7 @@ export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
           </label>
         </div>
       </fieldset>
-      <fieldset disabled={saving}>
+      <fieldset disabled={locked}>
         <legend>
           <span>03</span>Recorded plot boundary
         </legend>
@@ -148,7 +152,7 @@ export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
           }
         />
       </fieldset>
-      <fieldset className="consent" disabled={saving}>
+      <fieldset className="consent" disabled={locked}>
         <legend>
           <span>04</span>Permission comes first
         </legend>
@@ -166,6 +170,13 @@ export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
           {error}
         </div>
       )}
+      {queued && (
+        <p className="capture-note">
+          This submitted copy is fixed to prevent duplicate registration.{" "}
+          <a href="#pending">Open pending registrations</a> to retry or discard
+          its device copy.
+        </p>
+      )}
       <div className="form-footer">
         <a
           className="text-button"
@@ -182,11 +193,41 @@ export function Registration({ onSaved }: { onSaved: (farm: Farm) => void }) {
         >
           Cancel
         </a>
-        <button className="button primary" type="submit" disabled={saving}>
+        <button className="button primary" type="submit" disabled={locked}>
           {saving ? "Saving farm..." : "Save farm record"}
           <Icon name="arrow" />
         </button>
       </div>
+      {localCapture && (
+        <div className="capture-actions">
+          <button
+            type="submit"
+            data-action="draft"
+            formNoValidate
+            className="button secondary"
+            disabled={locked}
+          >
+            Save sample draft
+          </button>
+          <button
+            type="submit"
+            data-action="queue"
+            className="button secondary"
+            disabled={locked}
+          >
+            Keep pending for later
+          </button>
+          <button
+            type="submit"
+            data-action="discard-draft"
+            formNoValidate
+            className="text-button"
+            disabled={locked}
+          >
+            Discard saved draft
+          </button>
+        </div>
+      )}
     </form>
   );
 }

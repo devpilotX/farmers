@@ -17,7 +17,7 @@ const questions = [
   {
     question: "What is being built next?",
     answer:
-      "The wider plan connects validated local warnings, approved actions, damage evidence and recovery support. Offline capture, identity and local-language content must be ready before a field pilot.",
+      "The wider plan connects validated local warnings, approved actions, damage evidence and recovery support. Full offline operation, identity and local-language content must be ready before a field pilot.",
   },
 ];
 export function Questions() {

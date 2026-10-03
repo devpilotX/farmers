@@ -9,6 +9,8 @@ import { Overview } from "./pages/Overview";
 import { Registry } from "./pages/Registry";
 import { Registration } from "./pages/Registration";
 import { Preparedness } from "./pages/Preparedness";
+import { PendingRecords } from "./pages/PendingRecords";
+import { localCaptureAllowed } from "./local/records";
 import { Summary } from "./pages/Summary";
 const titles = {
   overview: "Farm preparedness",
@@ -16,6 +18,7 @@ const titles = {
   register: "New farm record",
   prepare: "Preparedness plan",
   summary: "Farmer summary",
+  pending: "Pending registrations",
 };
 export default function FieldWorkspace() {
   const [route, setRoute] = useState(currentRoute);
@@ -44,6 +47,9 @@ export default function FieldWorkspace() {
       .querySelector('meta[name="robots"]')
       ?.setAttribute("content", "noindex,nofollow");
   }, [route]);
+  const localCapture = localCaptureAllowed(workspace?.mode, location.hostname);
+  const captureView =
+    localCapture && (route === "register" || route === "pending");
   const isFarmView = route === "prepare" || route === "summary";
   return (
     <>
@@ -108,7 +114,7 @@ export default function FieldWorkspace() {
             <div className="empty-state" role="status">
               Loading the farm workspace...
             </div>
-          ) : error ? (
+          ) : error && !captureView ? (
             <div className="error-box" role="alert">
               <h2>We could not load the workspace.</h2>
               <p>{error}</p>
@@ -124,10 +130,24 @@ export default function FieldWorkspace() {
             </div>
           ) : (
             <>
+              {error && captureView && (
+                <p className="error-box" role="alert">
+                  The API is unavailable. Device copies are not confirmed farm
+                  records. {error}
+                </p>
+              )}
+              {route === "pending" && (
+                <PendingRecords localCapture={localCapture} onSynced={reload} />
+              )}
               {route === "overview" && <Overview farms={farms} />}
               {route === "farms" && <Registry farms={farms} />}
               {route === "register" && (
                 <Registration
+                  localCapture={localCapture}
+                  onQueued={() => {
+                    setNotice("");
+                    navigate("pending");
+                  }}
                   onSaved={(farm) => {
                     reload();
                     setRevision((value) => value + 1);

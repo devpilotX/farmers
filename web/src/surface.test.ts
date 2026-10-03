@@ -10,6 +10,7 @@ describe("public and operational entry points", () => {
     ["/workspace/", "#summary?farm=example", "workspace"],
     ["/", "#overview", "workspace"],
     ["/", "#register", "workspace"],
+    ["/", "#pending", "workspace"],
     ["/", "#summary?farm=example", "workspace"],
     ["/missing", "", "not-found"],
     ["/workspace-archive", "", "not-found"],

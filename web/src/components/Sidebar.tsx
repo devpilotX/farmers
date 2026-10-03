@@ -6,6 +6,7 @@ const links = [
   { route: "farms", name: "Farm registry", icon: "farm" },
   { route: "prepare", name: "Preparedness", icon: "check" },
   { route: "summary", name: "Farmer summary", icon: "file" },
+  { route: "pending", name: "Pending registrations", icon: "file" },
 ] as const;
 export function Sidebar({ route }: { route: Route }) {
   const [open, setOpen] = useState(false);

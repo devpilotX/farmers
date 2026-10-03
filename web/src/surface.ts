@@ -5,6 +5,7 @@ const workspaceFragments = new Set([
   "prepare",
   "summary",
   "register",
+  "pending",
 ]);
 export function surfaceForLocation(pathname: string, hash: string): Surface {
   if (pathname === "/workspace" || pathname === "/workspace/")
